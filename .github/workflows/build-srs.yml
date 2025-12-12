@@ -1,0 +1,45 @@
+name: Build SRS Rules
+
+on:
+  push:
+    paths:
+      - "rules/*.json"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Sing-box
+        run: |
+          wget https://github.com/SagerNet/sing-box/releases/latest/download/sing-box-linux-amd64.tar.gz
+          tar -xvf sing-box-linux-amd64.tar.gz
+          sudo mv sing-box*/sing-box /usr/local/bin/sing-box
+          sing-box version
+
+      - name: Build rule-set files
+        run: |
+          mkdir -p srs
+          for f in rules/*.json; do
+            filename=$(basename "$f")
+            name="${filename%.*}"
+            echo "Building $name.srs ..."
+            sing-box rule-set build "$f" -o "srs/$name.srs"
+          done
+
+      - name: Move to release directory
+        run: |
+          mkdir -p release
+          cp srs/*.srs release/
+
+      - name: Commit & Push generated SRS
+        run: |
+          git config --local user.email "github-actions@example.com"
+          git config --local user.name "GitHub Actions"
+          git add release/*.srs || true
+          git commit -m "Auto build SRS rules" || true
+          git push || true
