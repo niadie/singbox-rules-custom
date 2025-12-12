@@ -1,49 +1,59 @@
-name: Build Sing-box Ruleset
+name: Build Sing-box Rule Sets
 
 on:
+  # 当推送到 main 分支时触发
+  push:
+    branches:
+      - main
+    paths:
+      - 'rules/*.json'
+  
+  # 允许手动触发
   workflow_dispatch:
-  release:
-    types: [published]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     
     steps:
-      - name: Checkout Code
+      # 1. 检出仓库代码
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.22'
-
-      - name: Install sing-box
+      # 2. 下载最新版 sing-box
+      - name: Download sing-box
         run: |
-          go install -v -tags with_quic,with_dhcp,with_wireguard,with_ech,with_utls,with_reality_server,with_clash_api,with_gvisor github.com/sagernet/sing-box/cmd/sing-box@latest
-
-      - name: Compile Rulesets
-        run: |
-          # 进入 rules 文件夹
-          cd rules
+          # 获取最新版本号
+          LATEST=$(curl -s https://api.github.com/repos/SagerNet/sing-box/releases/latest | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
+          VERSION=${LATEST#v}
+          echo "Downloading sing-box version: $VERSION"
           
-          # 这是一个循环命令：找到所有 .json 文件，自动编译
-          for file in *.json; do
-            echo "正在编译: $file ..."
-            # ${file%.json}.srs 的意思是：把文件名里的 .json 去掉，换成 .srs
-            sing-box ruleset compile "$file" -o "${file%.json}.srs"
+          # 下载并解压
+          wget -q "https://github.com/SagerNet/sing-box/releases/download/${LATEST}/sing-box-${VERSION}-linux-amd64.tar.gz"
+          tar -xzf "sing-box-${VERSION}-linux-amd64.tar.gz"
+          sudo mv "sing-box-${VERSION}-linux-amd64/sing-box" /usr/local/bin/
+          sing-box version
+
+      # 3. 创建输出目录
+      - name: Create output directory
+        run: mkdir -p ruleset
+
+      # 4. 编译所有规则集
+      - name: Compile rule sets
+        run: |
+          for json_file in rules/*.json; do
+            filename=$(basename "$json_file" .json)
+            echo "Compiling: $filename"
+            sing-box rule-set compile "$json_file" -o "ruleset/${filename}.srs"
           done
-          
-          # 列出一下生成的文件，方便在日志里检查
-          ls -lh *.srs
+          echo "=== Compiled files ==="
+          ls -la ruleset/
 
-      - name: Upload to Release
-        uses: softprops/action-gh-release@v2
-        if: github.event_name == 'release'
-        with:
-          # 这里告诉它：去 rules 文件夹里把所有 srs 文件抓取出来上传
-          files: rules/*.srs
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # 5. 提交生成的 .srs 文件
+      - name: Commit and push
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add ruleset/*.srs
+          git diff --staged --quiet || git commit -m "Auto-build: Update rule sets $(date +'%Y-%m-%d %H:%M')"
+          git push
