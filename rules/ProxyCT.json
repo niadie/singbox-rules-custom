@@ -1,0 +1,22 @@
+{
+  "version": 4,
+  "rules": [
+    {
+      "domain_suffix": [
+        "tampermonkey.net",
+        "userscript.zone",
+        "openuserjs.org",
+        "nthlink.com",
+        "bulianglin.com",
+        "winscp.net",
+        "cloudns.net",
+        "sap.com",
+        "ondemand.com",
+        "databricks.com",
+        "steelseries.com",
+        "c.gle",
+        "nel.goog"
+      ]
+    }
+  ]
+}
