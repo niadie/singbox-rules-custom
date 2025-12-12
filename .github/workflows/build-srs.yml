@@ -1,14 +1,12 @@
 name: Build Sing-box Rule Sets
 
 on:
-  # 当推送到 main 分支时触发
   push:
     branches:
       - main
     paths:
       - 'rules/*.json'
   
-  # 允许手动触发
   workflow_dispatch:
 
 jobs:
@@ -16,44 +14,33 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      # 1. 检出仓库代码
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. 下载最新版 sing-box
       - name: Download sing-box
         run: |
-          # 获取最新版本号
           LATEST=$(curl -s https://api.github.com/repos/SagerNet/sing-box/releases/latest | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
           VERSION=${LATEST#v}
           echo "Downloading sing-box version: $VERSION"
-          
-          # 下载并解压
           wget -q "https://github.com/SagerNet/sing-box/releases/download/${LATEST}/sing-box-${VERSION}-linux-amd64.tar.gz"
           tar -xzf "sing-box-${VERSION}-linux-amd64.tar.gz"
           sudo mv "sing-box-${VERSION}-linux-amd64/sing-box" /usr/local/bin/
           sing-box version
 
-      # 3. 创建输出目录
-      - name: Create output directory
-        run: mkdir -p ruleset
-
-      # 4. 编译所有规则集
       - name: Compile rule sets
         run: |
           for json_file in rules/*.json; do
             filename=$(basename "$json_file" .json)
             echo "Compiling: $filename"
-            sing-box rule-set compile "$json_file" -o "ruleset/${filename}.srs"
+            sing-box rule-set compile "$json_file" -o "rules/${filename}.srs"
           done
           echo "=== Compiled files ==="
-          ls -la ruleset/
+          ls -la rules/
 
-      # 5. 提交生成的 .srs 文件
       - name: Commit and push
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add ruleset/*.srs
+          git add rules/*.srs
           git diff --staged --quiet || git commit -m "Auto-build: Update rule sets $(date +'%Y-%m-%d %H:%M')"
           git push
