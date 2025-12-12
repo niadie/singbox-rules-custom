@@ -1,0 +1,27 @@
+{
+  "version": 4,
+  "rules": [
+    {
+      "domain_suffix": [
+        "vicp.net",
+        "x3322.net",
+        "oicp.net",
+        "xicp.net",
+        "pianyuan.org",
+        "netlify.app",
+        "smartisan.com",
+        "snote.ink",
+        "oray.com",
+        "yinfans.net",
+        "deepseek.com",
+        "xitongzhijia.net",
+        "ali213.net",
+        "ysjf.com",
+        "mediastory.cc",
+        "feishu.cn",
+        "gitlab.com",
+        "mao.fan"
+      ]
+    }
+  ]
+}
