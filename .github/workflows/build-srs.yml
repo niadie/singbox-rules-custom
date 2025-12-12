@@ -23,23 +23,17 @@ jobs:
 
       - name: Build rule-set files
         run: |
-          mkdir -p srs
           for f in rules/*.json; do
             filename=$(basename "$f")
             name="${filename%.*}"
-            echo "Building $name.srs ..."
-            sing-box rule-set build "$f" -o "srs/$name.srs"
+            echo "Building rules/$name.srs ..."
+            sing-box rule-set build "$f" -o "rules/$name.srs"
           done
-
-      - name: Move to release directory
-        run: |
-          mkdir -p release
-          cp srs/*.srs release/
 
       - name: Commit & Push generated SRS
         run: |
           git config --local user.email "github-actions@example.com"
           git config --local user.name "GitHub Actions"
-          git add release/*.srs || true
+          git add rules/*.srs || true
           git commit -m "Auto build SRS rules" || true
           git push || true
