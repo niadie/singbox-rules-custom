@@ -1,1 +1,17 @@
-v
+{
+  "version": 1,
+  "rules": [
+    {
+      "domain_suffix": [
+        "t.co",
+        "twimg.co",
+        "twimg.com",
+        "twimg.org",
+        "twitter.com",
+        "x.com",
+        "grok.com",
+        "x.ai"
+      ]
+    }
+  ]
+}
