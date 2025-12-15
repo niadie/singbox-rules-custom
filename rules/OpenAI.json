@@ -1,0 +1,24 @@
+{
+  "version": 2,
+  "rules": [
+    {
+      "domain_suffix": [
+        "chatgpt.com",
+        "sora.com",
+        "openai.com",
+        "oaistatic.com",
+        "oaiusercontent.com",
+        "openaiapi-site.azureedge.net",
+        "client-api.arkoselabs.com",
+        "auth0.com",
+        "featuregates.org",
+        "events.statsigapi.net",
+        "chatgpt.livekit.cloud",
+        "intercom.io",
+        "intercomcdn.com",
+        "identrust.com",
+        "chatgpt.livekit.cloud"
+      ]
+    }
+  ]
+}
