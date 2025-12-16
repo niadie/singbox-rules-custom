@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "rules": [
+    {
+      "domain_suffix": [
+        "ping0.cc",
+        "ip.sb",
+        "test-ipv6.com",
+        "ip.gs",
+        "ipw.cn",
+        "scamalytics.com",
+        "fiber.google.com",
+        "speedtest.net",
+        "speedtest.cn",
+        "itdog.cn",
+      ]
+    }
+  ]
+}
