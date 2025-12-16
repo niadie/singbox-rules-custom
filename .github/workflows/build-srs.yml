@@ -46,14 +46,21 @@ jobs:
             # 生成 .mrs
             temp_yaml="temp_${filename}.yaml"
             
-            # 创建正确格式的 YAML
             echo "payload:" > "$temp_yaml"
             
-            # domain_suffix -> +.domain
-            jq -r '.rules[].domain_suffix[]? // empty' "$json_file" | sed 's/^/  - '\''+./;s/$/'\''/'' >> "$temp_yaml"
+            # domain_suffix -> +.domain 格式
+            jq -r '.rules[].domain_suffix[]? // empty' "$json_file" | while read -r d; do
+              if [ -n "$d" ]; then
+                echo "  - '+.$d'" >> "$temp_yaml"
+              fi
+            done
             
-            # domain -> domain
-            jq -r '.rules[].domain[]? // empty' "$json_file" | sed "s/^/  - '/;s/$/'/" >> "$temp_yaml"
+            # domain -> 直接使用
+            jq -r '.rules[].domain[]? // empty' "$json_file" | while read -r d; do
+              if [ -n "$d" ]; then
+                echo "  - '$d'" >> "$temp_yaml"
+              fi
+            done
             
             echo "--- Generated YAML ---"
             cat "$temp_yaml"
@@ -70,8 +77,4 @@ jobs:
 
       - name: Commit and push
         run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add rules/*.srs rules/*.mrs
-          git diff --staged --quiet || git commit -m "Auto-build: Update rule sets $(date +'%Y-%m-%d %H:%M')"
-          git push
+          git config --local user.email 
