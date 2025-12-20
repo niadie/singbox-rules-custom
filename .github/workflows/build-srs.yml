@@ -21,15 +21,16 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Download sing-box
+      - name: Download sing-box (Pre-release)
         run: |
           # 获取最新版本（包括 pre-release）
           LATEST=$(curl -s https://api.github.com/repos/SagerNet/sing-box/releases | jq -r '.[0].tag_name')
           VERSION=${LATEST#v}
-          echo "Downloading sing-box version: $VERSION"
+          echo "📦 Downloading sing-box version: $VERSION"
           wget -q "https://github.com/SagerNet/sing-box/releases/download/${LATEST}/sing-box-${VERSION}-linux-amd64.tar.gz"
           tar -xzf "sing-box-${VERSION}-linux-amd64.tar.gz"
           sudo mv "sing-box-${VERSION}-linux-amd64/sing-box" /usr/local/bin/
+          echo "✅ sing-box version:"
           sing-box version
 
       - name: Download mihomo
