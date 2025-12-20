@@ -1,0 +1,96 @@
+name: Build Rule Sets (SRS + MRS)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'rules/*.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download sing-box
+        run: |
+          # 获取最新版本（包括 pre-release）
+          LATEST=$(curl -s https://api.github.com/repos/SagerNet/sing-box/releases | jq -r '.[0].tag_name')
+          VERSION=${LATEST#v}
+          echo "Downloading sing-box version: $VERSION"
+          wget -q "https://github.com/SagerNet/sing-box/releases/download/${LATEST}/sing-box-${VERSION}-linux-amd64.tar.gz"
+          tar -xzf "sing-box-${VERSION}-linux-amd64.tar.gz"
+          sudo mv "sing-box-${VERSION}-linux-amd64/sing-box" /usr/local/bin/
+          sing-box version
+
+      - name: Download mihomo
+        run: |
+          LATEST=$(curl -s https://api.github.com/repos/MetaCubeX/mihomo/releases/latest | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
+          wget -q "https://github.com/MetaCubeX/mihomo/releases/download/${LATEST}/mihomo-linux-amd64-${LATEST}.gz"
+          gunzip mihomo-linux-amd64-${LATEST}.gz
+          chmod +x mihomo-linux-amd64-${LATEST}
+          sudo mv mihomo-linux-amd64-${LATEST} /usr/local/bin/mihomo
+
+      - name: Compile rule sets
+        run: |
+          for json_file in rules/*.json; do
+            filename=$(basename "$json_file" .json)
+            echo ""
+            echo "====== Processing: $filename ======"
+            
+            # 生成 .srs
+            sing-box rule-set compile "$json_file" -o "rules/${filename}.srs"
+            echo "✅ ${filename}.srs"
+            
+            # 生成 .mrs
+            temp_yaml="temp_${filename}.yaml"
+            
+            echo "payload:" > "$temp_yaml"
+            
+            # domain_suffix -> +.domain 格式
+            jq -r '.rules[].domain_suffix[]? // empty' "$json_file" | while read -r d; do
+              if [ -n "$d" ]; then
+                echo "  - '+.$d'" >> "$temp_yaml"
+              fi
+            done
+            
+            # domain -> 直接使用
+            jq -r '.rules[].domain[]? // empty' "$json_file" | while read -r d; do
+              if [ -n "$d" ]; then
+                echo "  - '$d'" >> "$temp_yaml"
+              fi
+            done
+            
+            echo "--- Generated YAML ---"
+            cat "$temp_yaml"
+            echo "----------------------"
+            
+            mihomo convert-ruleset domain yaml "$temp_yaml" "rules/${filename}.mrs"
+            echo "✅ ${filename}.mrs"
+            
+            rm -f "$temp_yaml"
+          done
+          
+          echo ""
+          ls -lh rules/
+
+      - name: Commit and push
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add rules/*.srs rules/*.mrs
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Auto-build: Update rule sets $(date +'%Y-%m-%d %H:%M')"
+            git push
+          fi
