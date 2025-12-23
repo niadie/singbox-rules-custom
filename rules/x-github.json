@@ -21,7 +21,12 @@
         "githubapp.com",
         "github.blog",
         "github-api.arkoselabs.com",
-        "github-cloud.s3.amazonaws.com"
+        "github-cloud.s3.amazonaws.com",
+        "githubcopilot.com",
+        "copilot.microsoft.com",
+        "copilot.cloud.microsoft",
+        "sydney.bing.com",
+        "ai.azure.com"
       ]
     }
   ]
