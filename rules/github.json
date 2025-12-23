@@ -1,0 +1,19 @@
+{
+  "version": 4,
+  "rules": [
+    {
+      "domain_suffix": [
+        "ghcr.io",
+        "github.io",
+        "github.com",
+        "githubstatus.com",
+        "githubassets.com",
+        "githubusercontent.com",
+        "githubapp.com",
+        "github.blog",
+        "github-api.arkoselabs.com",
+        "github-cloud.s3.amazonaws.com"
+      ]
+    }
+  ]
+}
